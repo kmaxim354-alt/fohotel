@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d1c">
+  <title>Hacker Hotel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main id="stage" class="stage">
+    <img id="bg" class="bg" src="/background_open.jpg" alt="" draggable="false">
+
+    <!-- 10 комнат: окна и створки создаются в app.js -->
+    <div id="rooms" class="layer"></div>
+
+    <!-- такси: появляется, когда куплены все 10 комнат, и увозит игрока во второй отель -->
+    <button id="car" class="car hidden" aria-label="Такси в новый отель">
+      <svg viewBox="0 0 170 80" width="100%" height="100%">
+        <ellipse cx="85" cy="72" rx="74" ry="7" fill="#27d7ff" opacity=".28"/>
+        <path d="M150 38 L170 44 L170 54 L150 54Z" fill="#fff6b0" opacity=".28"/>
+        <rect x="8" y="30" width="144" height="26" rx="9" fill="#2f4aa8"/>
+        <path d="M38 30 L54 10 H110 L128 30Z" fill="#3f5fd0"/>
+        <path d="M52 28 L62 14 H82 V28Z" fill="#a9ecff"/><path d="M87 28 V14 H108 L119 28Z" fill="#a9ecff"/>
+        <rect x="73" y="2" width="22" height="8" rx="2" fill="#ffc83a"/>
+        <rect x="8" y="38" width="7" height="8" rx="2" fill="#ff4a5a"/><rect x="146" y="38" width="8" height="8" rx="2" fill="#fff3a0"/>
+        <rect x="14" y="50" width="140" height="3" fill="#1c2f78"/>
+        <g class="wheel"><circle cx="40" cy="58" r="12" fill="#0b0e1d" stroke="#6a7599" stroke-width="2.5"/><circle cx="40" cy="58" r="4" fill="#9aa4c8"/></g>
+        <g class="wheel"><circle cx="124" cy="58" r="12" fill="#0b0e1d" stroke="#6a7599" stroke-width="2.5"/><circle cx="124" cy="58" r="4" fill="#9aa4c8"/></g>
+      </svg>
+    </button>
+
+    <!-- ресепшен: нажимай, чтобы получать монеты -->
+    <button id="reception" class="reception" aria-label="Ресепшен"></button>
+
+    <!-- верхняя панель -->
+    <header class="hud">
+      <div class="chip profile"><span id="avatar" class="avatar"></span><span id="name">Игрок</span></div>
+      <div class="chip center" id="centerChip">
+        <span class="coin-ico">$</span><span id="coins">0</span>
+        <span id="playersWrap" class="hidden"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14.2c2.4 0 4 1.8 4 4.3"/></svg><b id="players">0</b></span>
+      </div>
+      <div class="chip income"><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span id="income">+0/c</span></div>
+      <div class="right2">
+        <button id="adminBtn" class="chip btn round hidden" aria-label="Админ">⚙️</button>
+        <button id="hotelBtn" class="chip btn hidden">🏨 Отель 1</button>
+        <button id="soundBtn" class="chip btn round" aria-label="Звук">🔊</button>
+        <button id="statsBtn" class="chip btn">Статистика</button>
+        <button id="backBtn" class="chip btn hidden"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Назад</button>
+      </div>
+    </header>
+
+    <!-- рейд: появляется, когда на отель напали -->
+    <div id="raid" class="raid hidden">
+      <span class="siren">🚨</span>
+      <div class="rt"><b>РЕЙД НА ОТЕЛЬ</b><small>осталось <span id="raidTimer">60:00</span></small></div>
+      <button id="raidBtn">ОТБИТЬ</button>
+    </div>
+
+    <!-- экран рейтинга / ачивок -->
+    <section id="board" class="board hidden">
+      <h2 id="boardTitle">ТОП-10 ИГРОКОВ</h2>
+      <div id="boardBody" class="board-body"></div>
+      <nav class="tabs">
+        <button id="tabTop" class="tab active">ТОП 10 ИГРОКОВ</button>
+        <button id="tabAch" class="tab">АЧИВКИ</button>
+      </nav>
+    </section>
+  </main>
+
+  <!-- админ-панель (видна только админу) -->
+  <section id="admin" class="admin hidden">
+    <div class="adm-head"><b>⚙️ Админ-панель</b><button id="admClose" aria-label="Закрыть">✕</button></div>
+    <div class="adm-body">
+      <div class="adm-block">
+        <h4>Кому</h4>
+        <div class="seg"><button id="tgOne" class="on">Один игрок</button><button id="tgAll">Все игроки</button></div>
+        <input id="admUser" type="text" autocomplete="off" autocapitalize="off" placeholder="@username или Telegram ID">
+        <button id="admFind" class="adm-btn">Показать игрока</button>
+        <div id="admInfo" class="adm-info"></div>
+      </div>
+      <div class="adm-block">
+        <h4>Монеты</h4>
+        <input id="admAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="Сумма, например 500000">
+        <div class="two"><button id="admAdd" class="adm-btn">Начислить</button><button id="admSub" class="adm-btn">Списать</button></div>
+      </div>
+      <div class="adm-block">
+        <h4>Комнаты</h4>
+        <div class="two"><select id="admGiveN"></select><button id="admGive" class="adm-btn">Выдать комнаты</button></div>
+        <div class="two"><select id="admTakeN"></select><button id="admTake" class="adm-btn">Забрать комнату</button></div>
+        <button id="admTakeAll" class="adm-btn danger">Забрать все комнаты</button>
+        <small>Забрать можно только у одного игрока. «Выдать» даёт комнаты с 1-й по выбранную, купленные не трогает.</small>
+      </div>
+      <div class="adm-block">
+        <h4>Анонс всем игрокам</h4>
+        <textarea id="admText" rows="4" maxlength="1000" placeholder="Текст анонса (придёт в чат бота и покажется в игре)"></textarea>
+        <button id="admAnn" class="adm-btn">Отправить всем</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- модальное окно -->
+  <div id="modal" class="modal hidden">
+    <div class="card">
+      <h3 id="mTitle"></h3>
+      <p id="mText"></p>
+      <div id="mRows" class="rows"></div>
+      <div class="actions">
+        <button id="mCancel" class="ghost"></button>
+        <button id="mOk" class="primary"><span id="mOkLabel"></span><i><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
